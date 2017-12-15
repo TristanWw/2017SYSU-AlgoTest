@@ -92,7 +92,7 @@ int main() {
 	// ---------------------------------------------------------------------------------------------
 
 	// Using iterators ensures the QuickSort method is more adaptive,
-	// it can not only sort vector<> objects, but plain array as well.
+	// it can not only sort vector<> objects, but plain arrays as well.
 	int* arrayLeftIter = dataSetArray;
 	int* arrayRightIter = dataSetArray + dataSetArrayLength;
 	cout << "array before sorting: \n";

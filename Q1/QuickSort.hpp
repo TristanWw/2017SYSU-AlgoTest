@@ -1,3 +1,7 @@
+#ifndef DEF_QUICKSORT_HPP
+#define DEF_QUICKSORT_HPP
+
+
 #include <assert.h>
 #include <type_traits>
 #include <algorithm>
@@ -123,3 +127,6 @@ inline void QuickSort(RAIter begin, RAIter end,
 	QuickSort(begin, newPivotIter, less, policy);
 	QuickSort(newPivotIter + 1, end, less, policy);
 }
+
+
+#endif
