@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <stdlib.h>
+#include <set>
 
 using namespace std;
 
@@ -93,6 +94,8 @@ int main() {
 			int equalCounter = 0;
 			int notEqualCounter = 0;
 
+			set<TestContainerType::value_type> difference;
+
 			for (auto j = 0; j < numOfTest; ++j) {
 				bool isSame = true;
 				for (auto k = 0; k < numOfComparison; ++k) {
@@ -100,12 +103,23 @@ int main() {
 					if (!result.isSame) {
 						isSame = false;
 						notEqualCounter++;
+						difference.insert(*result.value);
 						break;
 					}
 				}
 				if (isSame)equalCounter++;
 			}
+			cout << "Different item: ";
+			if (difference.empty()) {
+				cout << "none";
+			}
+			else {
+				for (auto iter = difference.begin(); iter != difference.end(); ++iter) {
+					cout << *iter << " ";
+				}
+			}
 
+			cout << "\n";
 			cout << "Equal counter: " << equalCounter << " | Not equal counter: " << notEqualCounter;
 			cout << " | Success rate: ";
 			if (isSTSame[i]) {
