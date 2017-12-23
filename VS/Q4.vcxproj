@@ -122,6 +122,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Q4\Backtrack.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Q4\Test.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
