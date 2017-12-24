@@ -43,7 +43,7 @@ private:
 public:
 
 	Knapsack() {}
-	Knapsack(WeightType _maxWeight):maxWeight{_maxWeight}{}
+	Knapsack(WeightType _maxWeight) :maxWeight{ _maxWeight } {}
 	Knapsack(ItemContainerConstIter begin,
 		ItemContainerConstIter end,
 		WeightType _maxWeight) :maxWeight{ _maxWeight } {
@@ -70,8 +70,10 @@ public:
 		return result;
 	}
 
-	ItemContainerType GetOptimalChoice() const {
-
+	// this method will call SortItems()
+	ItemContainerType GetOptimalChoice() {
+		KnapsackSolverType solver{ *this };
+		return solver.BacktrackSorted();
 	}
 
 private:
@@ -81,6 +83,11 @@ private:
 
 };
 
+/*
+	Unlike general backtracking algorithms, which generate feasible solutions,
+	the knapsack problem requires an optimal solution. Thus a special algorithm
+	which traverses through the entire solution space is needed.
+*/
 template<typename WeightT, typename PriceT, typename ItemContainerT>
 class KnapsackSolver {
 public:
@@ -90,20 +97,26 @@ public:
 	using ItemType = Item<WeightType, PriceType>;
 	using ItemContainerType = typename KnapsackType::ItemContainerType;
 
-	KnapsackSolver(const KnapsackType &_knapsack) :knapsack{ _knapsack } {}
+	KnapsackSolver(KnapsackType &_knapsack) :knapsack{ _knapsack } {}
 
-	/*
-	Unlike general backtracking algorithms, which generate feasible solutions,
-	the knapsack problem requires an optimal solution. Thus a special algorithm
-	which traverses through the entire solution space is needed.
-	*/
+	// this method will sort the knapsack item container
 	ItemContainerType SortedSolve() {
 		this->Init();
 		this->choice.resize(this->knapsack.GetItems().size(), false);
 		this->bestChoice.resize(this->knapsack.GetItems().size(), false);
 
-		auto sortedItem = this->knapsack.GetSortedItems();
-		this->sortedItem = move(sortedItem);
+		this->knapsack.SortItems();
+
+		this->BacktrackSorted(0);
+
+		ItemContainerType result;
+		for (auto i = 0U; i < this->bestChoice.size(); ++i) {
+			if (this->bestChoice[i])
+				// avoid using operator[] (not incrementing the counter)
+				result.push_back(this->knapsack.GetItems().at(i));
+		}
+
+		return result;
 	}
 
 	ItemContainerType DirectSolve() {
@@ -115,8 +128,9 @@ public:
 
 		ItemContainerType result;
 		for (auto i = 0U; i < this->bestChoice.size(); ++i) {
-			if(this->bestChoice[i])
-				result.push_back(this->knapsack.GetItems()[i]);
+			if (this->bestChoice[i])
+				// avoid using operator[] (not incrementing the counter)
+				result.push_back(this->knapsack.GetItems().at(i));
 		}
 
 		return result;
@@ -129,7 +143,6 @@ private:
 		this->currentWeight = 0;
 		this->bestPrice = 0;
 
-		this->sortedItem.clear();
 		this->choice.clear();
 		this->bestChoice.clear();
 	}
@@ -144,7 +157,7 @@ private:
 		if (this->currentWeight + currentItem.weight <= this->knapsack.GetMaxWeight()) {
 			// select the current item
 			this->currentWeight += currentItem.weight;
-			this->currentPrice += currentItem.price; 
+			this->currentPrice += currentItem.price;
 			this->choice[depth] = true;
 
 			if (currentPrice > bestPrice) {
@@ -163,20 +176,74 @@ private:
 		this->BacktrackDirect(depth + 1);
 	}
 
-	PriceType GetPriceUpperBound() {
+	void BacktrackSorted(size_t depth) {
+		if (depth >= this->choice.size()) {
+			return;
+		}
 
+		const auto &currentItem = this->knapsack.GetItems()[depth];
+
+		if (this->currentWeight + currentItem.weight <= this->knapsack.GetMaxWeight()) {
+			// select the current item
+			this->currentWeight += currentItem.weight;
+			this->currentPrice += currentItem.price;
+			this->choice[depth] = true;
+
+			if (currentPrice > bestPrice) {
+				bestPrice = currentPrice;
+				copy(this->choice.begin(), this->choice.end(), this->bestChoice.begin());
+			}
+
+			// enter next layer
+			this->BacktrackSorted(depth + 1);
+
+			this->currentWeight -= currentItem.weight;
+			this->currentPrice -= currentItem.price;
+			this->choice[depth] = false;
+		}
+
+		if (this->GetPriceUpperBound(depth + 1) > bestPrice)
+			this->BacktrackSorted(depth + 1);
+	}
+
+	// make sure that the item conatiner is sorted according to 
+	// the price / weight ratio
+	PriceType GetPriceUpperBound(size_t depth) const {
+		PriceType maxPrice = currentPrice;
+		WeightType newWeight = currentWeight;
+		while (depth < this->knapsack.GetItems().size()) {
+			const auto &currentItem = this->knapsack.GetItems()[depth];
+			WeightType testWeight = currentItem.weight + newWeight;
+
+			if (testWeight > this->knapsack.GetMaxWeight())break;
+
+			newWeight = testWeight;
+			maxPrice += currentItem.price;
+			++depth;
+		}
+
+		// if not all items can be put in, just fill the knapsack
+		// according to the maximum price / weight ratio to get an
+		// upperbound of price
+		if (depth < this->knapsack.GetItems().size()) {
+			using FPType = typename ItemType::FPType;
+			const auto &currentItem = this->knapsack.GetItems()[depth];
+			WeightType weightLeft = this->knapsack.GetMaxWeight() - newWeight;
+			maxPrice += (PriceType)round((FPType)weightLeft * currentItem.GetPriceWeightRatio());
+		}
+
+		return maxPrice;
 	}
 
 private:
 	PriceType currentPrice{ 0 };
 	PriceType bestPrice{ 0 };
 	WeightType currentWeight{ 0 };
-	ItemContainerType sortedItem;
 	vector<bool> choice;
 	vector<bool> bestChoice;
 
 private:
-	const KnapsackType &knapsack;
+	KnapsackType &knapsack;
 };
 
 

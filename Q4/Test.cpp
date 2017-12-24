@@ -11,7 +11,10 @@ using namespace std;
 using WeightType = int;
 using PriceType = int;
 
-// a special container which provides element access counter
+// a special container which provides access counter for operator[].
+// The knapsack utility has been desgined to only use operator[] of
+// a container when running the backtrack algorithm. In other situations,
+// iterator access and at() are used instead.
 template<typename Type>
 class CounterVector : public vector<Type> {
 public:
@@ -54,6 +57,8 @@ private:
 		this->counter = make_unique<int>(0);
 	}
 
+	// the counter should be a pointer because we need a
+	// const operator[]
 	unique_ptr<int> counter;
 };
 
@@ -94,26 +99,44 @@ KnapsackType::ItemContainerType GetItemArray(const WeightArrayType &weightArray,
 template<typename ItemContainerType>
 void ShowItem(const ItemContainerType &items) {
 	auto itemCounter = 1;
+	WeightType totalWeight{ 0 };
+	PriceType totalPrice{ 0 };
 	for (const auto &item : items) {
 		cout << "item " << (itemCounter++) << " : $" << item.price;
 		cout << ", " << item.weight << "kg, $";
 		cout << fixed << setprecision(3) << item.GetPriceWeightRatio() << "/kg.\n";
+		totalWeight += item.weight;
+		totalPrice += item.price;
 	}
+	cout << "total weight: " << totalWeight << "kg.\n";
+	cout << "total price: $" << totalPrice << ".\n";
 }
 
 int main() {
 	auto itemArray = move(GetItemArray(weightArray, priceArray));
 	KnapsackType knapsack{ maxWeight };
 	knapsack.AssignItems(move(itemArray));
-	//knapsack.SortItems();
-	ShowItem(knapsack.GetItems());
 
+	cout << "Knapsack capacity: " << knapsack.GetMaxWeight() << "kg.\n";
+	cout << "Items are listed as follows:\n";
+	ShowItem(knapsack.GetItems());
 	cout << "\n";
 
 	KnapsackSolverType solver{ knapsack };
-	auto result = move(solver.DirectSolve());
-	cout << knapsack.GetItems().ReadCounter() << "\n";
-	ShowItem(result);
+
+	cout << "Solving without sorting (without branch pruning)\n";
+	knapsack.GetItems().ResetCounter();
+	auto directResult = move(solver.DirectSolve());
+	ShowItem(directResult);
+	cout << "Item access counter: " << knapsack.GetItems().ReadCounter() << "\n";
+
+	cout << "\n";
+
+	cout << "Solving with sorting (with branch pruning)\n";
+	knapsack.GetItems().ResetCounter();
+	auto sortedResult = move(solver.SortedSolve());
+	ShowItem(sortedResult);
+	cout << "Item access counter: " << knapsack.GetItems().ReadCounter() << "\n";
 
 	system("pause");
 	return 0;
