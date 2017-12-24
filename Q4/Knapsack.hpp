@@ -160,8 +160,8 @@ private:
 			this->currentPrice += currentItem.price;
 			this->choice[depth] = true;
 
-			if (currentPrice > bestPrice) {
-				bestPrice = currentPrice;
+			if (this->currentPrice > this->bestPrice) {
+				this->bestPrice = this->currentPrice;
 				copy(this->choice.begin(), this->choice.end(), this->bestChoice.begin());
 			}
 
@@ -189,8 +189,8 @@ private:
 			this->currentPrice += currentItem.price;
 			this->choice[depth] = true;
 
-			if (currentPrice > bestPrice) {
-				bestPrice = currentPrice;
+			if (this->currentPrice > this->bestPrice) {
+				this->bestPrice = this->currentPrice;
 				copy(this->choice.begin(), this->choice.end(), this->bestChoice.begin());
 			}
 
