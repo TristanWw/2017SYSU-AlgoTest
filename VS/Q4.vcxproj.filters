@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Q4\Backtrack.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
+    <ClCompile Include="..\Q4\Test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Q4\Test.cpp">
-      <Filter>源文件</Filter>
-    </None>
+    <ClInclude Include="..\Q4\Knapsack.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
